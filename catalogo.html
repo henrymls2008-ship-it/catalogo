@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Numismática - Premium Collection</title>
+    <link rel="icon" type="image/x-icon" href="logo.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .grayscale-agotado {
+            filter: grayscale(100%);
+            opacity: 0.7;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .badge-precio {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .badge-agotado {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .modal-fade {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .pulse-glow {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+        }
+        #logo-img {
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+        #logo-img:active {
+            transform: scale(0.9);
+        }
+        .social-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 30;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 15px;
+        }
+        .social-bubble {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease-out forwards;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .social-bubble:nth-child(1) { animation-delay: 0s; }
+        .social-bubble:nth-child(2) { animation-delay: 0.1s; }
+        .social-bubble:nth-child(3) { animation-delay: 0.2s; }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .social-bubble:hover {
+            transform: scale(1.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+        .social-bubble.whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #1fa855 100%);
+        }
+        .social-bubble.instagram {
+            background: linear-gradient(135deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        .social-bubble.facebook {
+            background: linear-gradient(135deg, #1877F2 0%, #0a66c2 100%);
+        }
+        .social-bubble:active {
+            transform: scale(0.95);
+        }
+        @media (max-width: 768px) {
+            .social-float {
+                bottom: 20px;
+                right: 20px;
+            }
+            .social-bubble {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-gray-100 min-h-screen">
+
+<!-- NAVBAR -->
+<nav class="bg-black/50 backdrop-blur-md border-b border-purple-500/30 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-4">
+            <!-- LOGO: Pon tu imagen en la carpeta con nombre logo.ico -->
+            <img id="logo-img" src="logo.ico" alt="Logo" class="w-14 h-14 rounded-full object-cover cursor-pointer hover:scale-110 transition-transform shadow-lg border-2 border-purple-500/50">
+            <span class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                EL SUCRE
+            </span>
+        </div>
+        <div class="flex gap-4 items-center">
+            <input type="text" id="search-input" placeholder="Buscar..." class="px-4 py-2 rounded-lg bg-slate-700/50 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500 w-60">
+            <button id="btn-auth" style="display: none;" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition">
+                <i class="fas fa-spinner fa-spin mr-2"></i>Dev Mode
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO SECTION -->
+<section class="relative py-16 px-4 text-center overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 blur-3xl"></div>
+    <div class="relative z-10 max-w-3xl mx-auto">
+        <h1 class="text-5xl font-bold mb-4">
+            <span class="bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent">
+        
+            </span>
+        </h1>
+        <p class="text-xl text-gray-300 mb-8">
+            Autenticidad garantizada. Ediciones limitadas. Envíos seguros a todo el mundo.
+        </p>
+    </div>
+</section>
+
+<!-- FILTROS -->
+<section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="flex flex-wrap gap-3 justify-center">
+        <button class="filter-btn px-6 py-2 rounded-full border border-purple-500 text-purple-300 hover:bg-purple-500/20 transition font-semibold" data-filter="all">
+            Todos
+        </button>
+        <button class="filter-btn px-6 py-2 rounded-full border border-purple-500/50 text-gray-300 hover:bg-purple-500/20 transition font-semibold" data-filter="moneda">
+            <i class="fas fa-coins mr-2"></i>Monedas
+        </button>
+        <button class="filter-btn px-6 py-2 rounded-full border border-purple-500/50 text-gray-300 hover:bg-purple-500/20 transition font-semibold" data-filter="billete">
+            <i class="fas fa-money-bill mr-2"></i>Billetes
+        </button>
+        <button class="filter-btn px-6 py-2 rounded-full border border-purple-500/50 text-gray-300 hover:bg-purple-500/20 transition font-semibold" data-filter="album">
+            <i class="fas fa-book mr-2"></i>Álbumes
+        </button>
+    </div>
+</section>
+
+<!-- GRID DE PRODUCTOS -->
+<section class="max-w-7xl mx-auto px-4 py-12">
+    <div id="productos-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Cards generadas por JS -->
+    </div>
+    <div id="no-resultados" class="col-span-full text-center py-20 hidden">
+        <i class="fas fa-search text-6xl text-gray-500 mb-4"></i>
+        <p class="text-xl text-gray-400">No se encontraron productos</p>
+    </div>
+</section>
+
+<!-- ============================================================================ -->
+<!-- MODAL DE AUTENTICACIÓN (Developer Mode) -->
+<!-- ============================================================================ -->
+<div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl shadow-2xl p-8 w-full max-w-md border border-purple-500/30 modal-fade">
+        <h2 class="text-2xl font-bold mb-6 text-center">
+            <i class="fas fa-lock text-purple-400 mr-2"></i>Panel de Desarrollador
+        </h2>
+        
+        <div id="auth-container">
+            <!-- Opciones de login: Email/Pass o Google -->
+            <div class="space-y-4 mb-6">
+                <input type="email" id="email-input" placeholder="Email" class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500">
+                <input type="password" id="password-input" placeholder="Contraseña" class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500">
+                <button id="btn-email-login" class="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+                </button>
+                <button id="btn-google-login" class="w-full px-4 py-3 bg-white text-slate-900 hover:bg-gray-100 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="fab fa-google"></i>Google
+                </button>
+            </div>
+
+            <div class="text-center text-gray-400 text-sm">
+                ¿No tienes cuenta? 
+                <button id="btn-signup-toggle" class="text-purple-400 hover:text-purple-300 underline">Crear una</button>
+            </div>
+        </div>
+
+        <div id="signup-container" class="hidden space-y-4">
+            <h3 class="text-lg font-semibold mb-4">Crear Cuenta</h3>
+            <input type="email" id="signup-email" placeholder="Email" class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500">
+            <input type="password" id="signup-password" placeholder="Contraseña (mín. 6 caracteres)" class="w-full px-4 py-3 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500">
+            <button id="btn-signup-create" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition">
+                <i class="fas fa-user-plus mr-2"></i>Registrarse
+            </button>
+            <button id="btn-login-toggle" class="w-full px-4 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition">
+                Volver a Login
+            </button>
+        </div>
+
+        <div id="logged-container" class="hidden text-center space-y-4">
+            <div class="text-lg font-semibold text-green-400">
+                <i class="fas fa-check-circle mr-2"></i>¡Autenticado!
+            </div>
+            <p id="user-email" class="text-gray-300"></p>
+            <button id="btn-close-modal" class="w-full px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition">
+                Cerrar
+            </button>
+            <button id="btn-logout" class="w-full px-4 py-3 bg-red-600/30 hover:bg-red-600/50 rounded-lg font-semibold transition text-red-300">
+                <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+            </button>
+        </div>
+
+        <button class="absolute top-4 right-4 text-gray-400 hover:text-white" onclick="document.getElementById('auth-modal').classList.add('hidden')">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+    </div>
+</div>
+
+<!-- ============================================================================ -->
+<!-- PANEL DE ADMINISTRACIÓN -->
+<!-- ============================================================================ -->
+<div id="admin-panel" class="fixed right-0 top-0 w-96 h-screen bg-gradient-to-b from-slate-900 to-black border-l border-purple-500/30 shadow-2xl overflow-y-auto z-30 transform translate-x-full transition-transform duration-300">
+    <div class="p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold text-purple-300">
+                <i class="fas fa-cog mr-2"></i>Panel Admin
+            </h2>
+            <button id="btn-close-admin" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- FORM DE PRODUCTO -->
+        <form id="product-form" class="space-y-4 mb-8">
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Nombre</label>
+                <input type="text" id="prod-nombre" placeholder="Ej: Moneda Inca 1807" class="w-full px-3 py-2 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Descripción</label>
+                <textarea id="prod-descripcion" placeholder="Detalles del producto..." class="w-full px-3 py-2 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500 h-20 resize-none"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Tipo</label>
+                <select id="prod-tipo" class="w-full px-3 py-2 rounded-lg bg-slate-700 text-white border border-purple-500/30 focus:outline-none focus:border-purple-500">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="moneda">Moneda</option>
+                    <option value="billete">Billete</option>
+                    <option value="album">Álbum</option>
+                </select>
+            </div>
+
+            <div id="origin-field" style="display: none;">
+                <label class="block text-sm font-semibold text-gray-300 mb-2">País de Origen</label>
+                <input type="text" id="prod-origen" placeholder="Ej: Perú" class="w-full px-3 py-2 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500">
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Precio ($)</label>
+                <input type="number" id="prod-precio" placeholder="0.00" step="0.01" class="w-full px-3 py-2 rounded-lg bg-slate-700 text-white placeholder-gray-400 border border-purple-500/30 focus:outline-none focus:border-purple-500">
+            </div>
+
+            <div>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" id="prod-stock" class="w-5 h-5">
+                    <span class="text-gray-300 font-semibold">En Stock</span>
+                </label>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Imagen</label>
+                <input type="file" id="prod-imagen" accept="image/*" class="w-full px-3 py-2 rounded-lg bg-slate-700 text-white border border-purple-500/30 focus:outline-none focus:border-purple-500">
+                <small class="text-gray-400">Max 5MB</small>
+            </div>
+
+            <button type="button" id="btn-save-product" class="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 rounded-lg font-semibold transition">
+                <i class="fas fa-save mr-2"></i>Guardar Producto
+            </button>
+        </form>
+
+        <!-- LISTA DE PRODUCTOS ADMIN -->
+        <div>
+            <h3 class="text-lg font-semibold text-gray-300 mb-4">Productos</h3>
+            <div id="admin-productos-list" class="space-y-3 max-h-96 overflow-y-auto">
+                <!-- Generado por JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================================ -->
+<!-- FIREBASE CONFIG -->
+<!-- ============================================================================ -->
+<script type="module">
+    // ========== PEGAR TU CONFIGURACIÓN DE FIREBASE AQUÍ ==========
+    const firebaseConfig = {
+        apiKey: "AIzaSyDEMO_PASTE_YOUR_API_KEY_HERE",
+        authDomain: "your-project.firebaseapp.com",
+        projectId: "your-project-id",
+        storageBucket: "your-project.appspot.com",
+        messagingSenderId: "000000000000",
+        appId: "1:000000000000:web:abcdefg123456"
+    };
+    // ============================================================
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    // ========== ESTADO GLOBAL ==========
+    let currentUser = null;
+    let allProducts = [];
+    let filteredProducts = [];
+    let clickCount = 0;
+    let lastClickTime = 0;
+    let isDevMode = false;
+
+    const devModeTime = 3000; // 3 segundos
+    const clicksRequired = 5; // 5 clics
+
+    // ========== ELEMENTOS DOM ==========
+    const logoImg = document.getElementById("logo-img");
+    const authModal = document.getElementById("auth-modal");
+    const adminPanel = document.getElementById("admin-panel");
+    const searchInput = document.getElementById("search-input");
+    const filterBtns = document.querySelectorAll(".filter-btn");
+    const productosGrid = document.getElementById("productos-grid");
+    const noResultados = document.getElementById("no-resultados");
+    const btnAuth = document.getElementById("btn-auth");
+    const productForm = document.getElementById("product-form");
+    const btnSaveProduct = document.getElementById("btn-save-product");
+    const prodTipoSelect = document.getElementById("prod-tipo");
+    const originField = document.getElementById("origin-field");
+
+    // Botones del modal
+    const btnEmailLogin = document.getElementById("btn-email-login");
+    const btnGoogleLogin = document.getElementById("btn-google-login");
+    const btnSignupToggle = document.getElementById("btn-signup-toggle");
+    const btnLoginToggle = document.getElementById("btn-login-toggle");
+    const btnSignupCreate = document.getElementById("btn-signup-create");
+    const btnCloseModal = document.getElementById("btn-close-modal");
+    const btnLogout = document.getElementById("btn-logout");
+    const btnCloseAdmin = document.getElementById("btn-close-admin");
+    const authContainer = document.getElementById("auth-container");
+    const signupContainer = document.getElementById("signup-container");
+    const loggedContainer = document.getElementById("logged-container");
+    const userEmail = document.getElementById("user-email");
+
+    // ========== LOGIC: CONTADOR DE CLICS EN LOGO ==========
+    logoImg.addEventListener("click", () => {
+        const now = Date.now();
+        
+        // Resetear si más de 3 segundos
+        if (now - lastClickTime > devModeTime) {
+            clickCount = 1;
+        } else {
+            clickCount++;
+        }
+
+        lastClickTime = now;
+
+        // Si 5 clics en 3 segundos → mostrar modal
+        if (clickCount === clicksRequired) {
+            showAuthModal();
+            clickCount = 0;
+        }
+    });
+
+    // ========== FUNCIONES DE MODAL ==========
+    function showAuthModal() {
+        authModal.classList.remove("hidden");
+        // Limpiar campos
+        document.getElementById("email-input").value = "";
+        document.getElementById("password-input").value = "";
+    }
+
+    btnSignupToggle.addEventListener("click", () => {
+        authContainer.classList.add("hidden");
+        signupContainer.classList.remove("hidden");
+    });
+
+    btnLoginToggle.addEventListener("click", () => {
+        signupContainer.classList.add("hidden");
+        authContainer.classList.remove("hidden");
+    });
+
+    btnCloseModal.addEventListener("click", () => {
+        authModal.classList.add("hidden");
+    });
+
+    // ========== AUTENTICACIÓN FIREBASE ==========
+    
+    // Email/Password Login
+    btnEmailLogin.addEventListener("click", async () => {
+        const email = document.getElementById("email-input").value;
+        const password = document.getElementById("password-input").value;
+
+        if (!email || !password) {
+            alert("Por favor, completa todos los campos");
+            return;
+        }
+
+        try {
+            btnEmailLogin.disabled = true;
+            btnEmailLogin.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+            await signInWithEmailAndPassword(auth, email, password);
+            showLoggedContainer();
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            btnEmailLogin.disabled = false;
+            btnEmailLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión';
+        }
+    });
+
+    // Email/Password Signup
+    btnSignupCreate.addEventListener("click", async () => {
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+
+        if (!email || !password || password.length < 6) {
+            alert("Email válido y contraseña de mín. 6 caracteres requerida");
+            return;
+        }
+
+        try {
+            btnSignupCreate.disabled = true;
+            btnSignupCreate.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Registrando...';
+
+            await createUserWithEmailAndPassword(auth, email, password);
+            showLoggedContainer();
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            btnSignupCreate.disabled = false;
+            btnSignupCreate.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Registrarse';
+        }
+    });
+
+    // Google Login
+    const provider = new GoogleAuthProvider();
+    btnGoogleLogin.addEventListener("click", async () => {
+        try {
+            btnGoogleLogin.disabled = true;
+            btnGoogleLogin.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+            await signInWithPopup(auth, provider);
+            showLoggedContainer();
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            btnGoogleLogin.disabled = false;
+            btnGoogleLogin.innerHTML = '<i class="fab fa-google"></i>Google';
+        }
+    });
+
+    // Logout
+    btnLogout.addEventListener("click", async () => {
+        await signOut(auth);
+        closeAdminPanel();
+        authModal.classList.add("hidden");
+    });
+
+    // Monitorear estado de autenticación
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+            isDevMode = true;
+            btnAuth.style.display = "inline-block";
+            btnAuth.classList.add("pulse-glow");
+        } else {
+            isDevMode = false;
+            btnAuth.style.display = "none";
+            btnAuth.classList.remove("pulse-glow");
+        }
+    });
+
+    function showLoggedContainer() {
+        authContainer.classList.add("hidden");
+        signupContainer.classList.add("hidden");
+        loggedContainer.classList.remove("hidden");
+        userEmail.textContent = currentUser.email;
+
+        // Mostrar panel admin después de 1 segundo
+        setTimeout(() => {
+            authModal.classList.add("hidden");
+            showAdminPanel();
+        }, 1000);
+    }
+
+    function closeAdminPanel() {
+        adminPanel.classList.add("translate-x-full");
+        loggedContainer.classList.add("hidden");
+        authContainer.classList.remove("hidden");
+        productForm.reset();
+    }
+
+    btnCloseAdmin.addEventListener("click", closeAdminPanel);
+
+    // ========== PANEL ADMIN: MOSTRAR/OCULTAR ==========
+    function showAdminPanel() {
+        adminPanel.classList.remove("translate-x-full");
+        loadAdminProducts();
+    }
+
+    // ========== CAMBIO DE TIPO (mostrar/ocultar origen) ==========
+    prodTipoSelect.addEventListener("change", () => {
+        const tipo = prodTipoSelect.value;
+        if (tipo === "moneda" || tipo === "billete") {
+            originField.style.display = "block";
+        } else {
+            originField.style.display = "none";
+            document.getElementById("prod-origen").value = "";
+        }
+    });
+
+    // ========== GUARDAR PRODUCTO ==========
+    btnSaveProduct.addEventListener("click", async () => {
+        const nombre = document.getElementById("prod-nombre").value.trim();
+        const descripcion = document.getElementById("prod-descripcion").value.trim();
+        const tipo = prodTipoSelect.value;
+        const origen = document.getElementById("prod-origen").value.trim();
+        const precio = parseFloat(document.getElementById("prod-precio").value);
+        const stock = document.getElementById("prod-stock").checked;
+        const imagenFile = document.getElementById("prod-imagen").files[0];
+
+        if (!nombre || !descripcion || !tipo || !precio || !imagenFile) {
+            alert("Por favor, completa todos los campos requeridos y sube una imagen");
+            return;
+        }
+
+        if (imagenFile.size > 5 * 1024 * 1024) {
+            alert("La imagen debe ser menor a 5MB");
+            return;
+        }
+
+        try {
+            btnSaveProduct.disabled = true;
+            btnSaveProduct.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+
+            // 1. Subir imagen a Storage
+            const imageRef = ref(storage, `productos/${Date.now()}_${imagenFile.name}`);
+            await uploadBytes(imageRef, imagenFile);
+            const imageUrl = await getDownloadURL(imageRef);
+
+            // 2. Crear documento en Firestore
+            const productData = {
+                nombre,
+                descripcion,
+                tipo,
+                precio,
+                stock,
+                imagen: imageUrl,
+                fecha: new Date().toISOString(),
+                userId: currentUser.uid
+            };
+
+            // Agregar origen solo si no es álbum
+            if (tipo !== "album" && origen) {
+                productData.origen = origen;
+            }
+
+            await addDoc(collection(db, "productos"), productData);
+
+            alert("Producto guardado exitosamente");
+            productForm.reset();
+            originField.style.display = "none";
+            loadAdminProducts();
+            loadPublicProducts();
+        } catch (error) {
+            alert("Error al guardar: " + error.message);
+        } finally {
+            btnSaveProduct.disabled = false;
+            btnSaveProduct.innerHTML = '<i class="fas fa-save mr-2"></i>Guardar Producto';
+        }
+    });
+
+    // ========== CARGAR PRODUCTOS ADMIN ==========
+    async function loadAdminProducts() {
+        try {
+            const q = query(collection(db, "productos"), where("userId", "==", currentUser.uid));
+            const snapshot = await getDocs(q);
+            const list = document.getElementById("admin-productos-list");
+            list.innerHTML = "";
+
+            snapshot.forEach((docSnap) => {
+                const prod = docSnap.data();
+                const item = document.createElement("div");
+                item.className = "bg-slate-700/50 p-3 rounded-lg border border-purple-500/30 flex justify-between items-center";
+                item.innerHTML = `
+                    <div class="flex-1">
+                        <p class="font-semibold text-white truncate">${prod.nombre}</p>
+                        <p class="text-sm text-gray-400">\$${prod.precio.toFixed(2)}</p>
+                    </div>
+                    <button class="text-red-400 hover:text-red-300 transition" onclick="deleteProduct('${docSnap.id}')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                list.appendChild(item);
+            });
+        } catch (error) {
+            console.error("Error cargando productos admin:", error);
+        }
+    }
+
+    // Hacer disponible globalmente
+    window.deleteProduct = async (docId) => {
+        if (!confirm("¿Eliminar este producto?")) return;
+        try {
+            await deleteDoc(doc(db, "productos", docId));
+            loadAdminProducts();
+            loadPublicProducts();
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    };
+
+    // ========== CARGAR PRODUCTOS PÚBLICOS ==========
+    async function loadPublicProducts() {
+        try {
+            const snapshot = await getDocs(collection(db, "productos"));
+            allProducts = [];
+
+            snapshot.forEach((docSnap) => {
+                allProducts.push({
+                    id: docSnap.id,
+                    ...docSnap.data()
+                });
+            });
+
+            filteredProducts = [...allProducts];
+            renderProducts(filteredProducts);
+        } catch (error) {
+            console.error("Error cargando productos:", error);
+        }
+    }
+
+    // ========== RENDERIZAR PRODUCTOS ==========
+    function renderProducts(products) {
+        productosGrid.innerHTML = "";
+
+        if (products.length === 0) {
+            noResultados.classList.remove("hidden");
+            return;
+        }
+
+        noResultados.classList.add("hidden");
+
+        products.forEach((prod) => {
+            const card = document.createElement("div");
+            card.className = `bg-gradient-to-b from-slate-800 to-slate-900 rounded-xl overflow-hidden border border-purple-500/30 card-hover ${!prod.stock ? "grayscale-agotado" : ""}`;
+            
+            let originBadge = "";
+            if ((prod.tipo === "moneda" || prod.tipo === "billete") && prod.origen) {
+                originBadge = `<span class="inline-block bg-blue-600/50 text-blue-200 px-2 py-1 rounded-md text-xs font-semibold ml-2">${prod.origen}</span>`;
+            }
+
+            card.innerHTML = `
+                <div class="relative overflow-hidden h-48 bg-gradient-to-b from-slate-700 to-slate-800">
+                    <img src="${prod.imagen}" alt="${prod.nombre}" class="w-full h-full object-cover hover:scale-110 transition duration-300">
+                    <div class="badge-precio">$${prod.precio.toFixed(2)}</div>
+                    ${!prod.stock ? '<div class="badge-agotado">AGOTADO</div>' : ""}
+                </div>
+                <div class="p-4">
+                    <h3 class="text-lg font-bold text-white mb-2 truncate">${prod.nombre}</h3>
+                    <p class="text-sm text-gray-400 mb-3 line-clamp-2">${prod.descripcion}</p>
+                    <div class="flex gap-2 mb-3 flex-wrap">
+                        <span class="bg-purple-600/50 text-purple-200 px-3 py-1 rounded-full text-xs font-semibold">
+                            ${prod.tipo.charAt(0).toUpperCase() + prod.tipo.slice(1)}
+                        </span>
+                        ${originBadge}
+                    </div>
+                    <div class="text-sm font-semibold ${prod.stock ? "text-green-400" : "text-red-400"}">
+                        ${prod.stock ? "✓ En Stock" : "✗ Agotado"}
+                    </div>
+                </div>
+            `;
+
+            productosGrid.appendChild(card);
+        });
+    }
+
+    // ========== FILTROS ==========
+    filterBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            filterBtns.forEach(b => b.classList.remove("border-purple-500", "text-purple-300", "bg-purple-500/20"));
+            filterBtns.forEach(b => b.classList.add("border-purple-500/50", "text-gray-300"));
+
+            btn.classList.add("border-purple-500", "text-purple-300", "bg-purple-500/20");
+
+            const filter = btn.dataset.filter;
+            if (filter === "all") {
+                filteredProducts = [...allProducts];
+            } else {
+                filteredProducts = allProducts.filter(p => p.tipo === filter);
+            }
+
+            renderProducts(filteredProducts);
+        });
+    });
+
+    // ========== BÚSQUEDA ==========
+    searchInput.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") {
+            const query = searchInput.value.toLowerCase().trim();
+            if (query === "") {
+                filteredProducts = [...allProducts];
+            } else {
+                filteredProducts = allProducts.filter(p =>
+                    p.nombre.toLowerCase().includes(query) ||
+                    p.descripcion.toLowerCase().includes(query) ||
+                    (p.origen && p.origen.toLowerCase().includes(query))
+                );
+            }
+            renderProducts(filteredProducts);
+        }
+    });
+
+    // ========== INICIALIZAR ==========
+    loadPublicProducts();
+
+    // Dev mode button
+    btnAuth.addEventListener("click", () => {
+        showAdminPanel();
+    });
+</script>
+
+<!-- REDES SOCIALES FLOTANTES -->
+<div class="social-float">
+    <!-- WhatsApp -->
+    <a href="https://wa.me/593994539892" target="_blank" class="social-bubble whatsapp" title="WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    <!-- Instagram -->
+    <a href="https://www.instagram.com/he_nry9006?igsh=MW12dWlseTcyZ3h3eg==" target="_blank" class="social-bubble instagram" title="Instagram">
+        <i class="fab fa-instagram"></i>
+    </a>
+    <!-- Facebook -->
+    <a href="https://facebook.com/elcostodelsucre" target="_blank" class="social-bubble facebook" title="Facebook">
+        <i class="fab fa-facebook-f"></i>
+    </a>
+</div>
+
+</body>
+</html>
